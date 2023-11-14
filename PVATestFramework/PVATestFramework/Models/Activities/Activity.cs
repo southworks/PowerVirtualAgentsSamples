@@ -33,7 +33,7 @@ namespace PVATestFramework.Console.Models.Activities
         public string Text { get; set; }
         public List<Attachment> Attachments { get; set; }
         public string ReplyToId { get; set; }
-        public List<object> SuggestedActions { get; set; }
+        public SuggestedAction SuggestedActions { get; set; }
         public int LineNumber { get; set; }
     }
 
@@ -43,6 +43,12 @@ namespace PVATestFramework.Console.Models.Activities
         {
             return activity.Type == "message" && !string.IsNullOrWhiteSpace(activity.Text);
         }
+    }
+
+    public class SuggestedAction
+    {
+        [JsonProperty("actions")]
+        public List<Action> Actions { get; set; }
     }
 
     public class Attachment
@@ -56,17 +62,23 @@ namespace PVATestFramework.Console.Models.Activities
 
     public class Action
     {
-        [JsonProperty("type")]
+        [JsonProperty("type", NullValueHandling = NullValueHandling.Ignore)]
         public string Type { get; set; }
 
-        [JsonProperty("title")]
+        [JsonProperty("title", NullValueHandling = NullValueHandling.Ignore)]
         public string Title { get; set; }
 
-        [JsonProperty("style")]
+        [JsonProperty("style", NullValueHandling = NullValueHandling.Ignore)]
         public string Style { get; set; }
 
-        [JsonProperty("data")]
+        [JsonProperty("data", NullValueHandling = NullValueHandling.Ignore)]
         public Data Data { get; set; }
+
+        [JsonProperty("text", NullValueHandling = NullValueHandling.Ignore)]
+        public string Text { get; set; }
+
+        [JsonProperty("value", NullValueHandling = NullValueHandling.Ignore)]
+        public string Value { get; set; }
     }
 
     public class Body
@@ -107,17 +119,44 @@ namespace PVATestFramework.Console.Models.Activities
 
     public class Content
     {
+        [JsonProperty("type", NullValueHandling = NullValueHandling.Ignore)]
+        public string Type { get; set; }
+
+        [JsonProperty("body", NullValueHandling = NullValueHandling.Ignore)]
+        public List<Body> Body { get; set; }
+
+        [JsonProperty("$schema", NullValueHandling = NullValueHandling.Ignore)]
+        public string Schema { get; set; }
+
+        [JsonProperty("version", NullValueHandling = NullValueHandling.Ignore)]
+        public string Version { get; set; }
+        
+        [JsonProperty("title", NullValueHandling = NullValueHandling.Ignore)]
+        public string Title { get; set; }
+        
+        [JsonProperty("images", NullValueHandling = NullValueHandling.Ignore)]
+        public List<Image> Images { get; set; }
+        
+        [JsonProperty("buttons", NullValueHandling = NullValueHandling.Ignore)]
+        public List<Button> Buttons { get; set; }
+    }
+
+    public class Image
+    {
+        [JsonProperty("url")]
+        public string Url { get; set; }
+    }
+
+    public class Button
+    {
         [JsonProperty("type")]
         public string Type { get; set; }
 
-        [JsonProperty("body")]
-        public List<Body> Body { get; set; }
+        [JsonProperty("title")]
+        public string Title { get; set; }
 
-        [JsonProperty("$schema")]
-        public string Schema { get; set; }
-
-        [JsonProperty("version")]
-        public string Version { get; set; }
+        [JsonProperty("value")]
+        public string Value { get; set; }
     }
 
     public class Data

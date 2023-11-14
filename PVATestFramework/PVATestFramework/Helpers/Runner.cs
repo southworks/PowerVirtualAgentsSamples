@@ -238,13 +238,88 @@ namespace PVATestFramework.Console
                             }
                             else
                             {
-                                activity = new Models.Activities.Activity
+                                if (botText.StartsWith("[image:"))
                                 {
-                                    Type = Helpers.ActivityTypes.Message,
-                                    Text = botText,
-                                    From = new From(string.Empty, 0),
-                                    Timestamp = ToUnixTimeSeconds(DateTime.UtcNow)
-                                };
+                                    var pattern = @"\[image:(?<image>.*?)\]\[title:(?<title>.*?)\]\[text:(?<text>.*?)\]";
+                                    var match = Regex.Match(botText, pattern);
+                                    if (match.Success)
+                                    {
+                                        var imageUrl = match.Groups["image"].Value;
+                                        var title = match.Groups["title"].Value;
+                                        var text = match.Groups["text"].Value;
+
+                                        activity = new Models.Activities.Activity
+                                        {
+                                            Type = Helpers.ActivityTypes.Message,
+                                            Text = text,
+                                            From = new From(string.Empty, 0),
+                                            Timestamp = ToUnixTimeSeconds(DateTime.UtcNow),
+                                            Attachments = new List<Attachment>
+                                            {
+                                                new Attachment()
+                                                {
+                                                    ContentType = CardContentTypes.HeroCard,
+                                                    Content = new Content()
+                                                    {
+                                                        Title = string.IsNullOrEmpty(title) ? null : title,
+                                                        Images = new List<Image>()
+                                                        {
+                                                            new Image()
+                                                            {
+                                                                Url = imageUrl
+                                                            }
+                                                        },
+                                                        Buttons = new List<Button>()
+                                                    }
+                                                }
+                                            }
+                                        };
+                                    }
+                                }
+                                else if (botText.StartsWith("[options:"))
+                                {
+                                    var pattern = @"\[options:(?<options>.*?)\]\[text:(?<text>.*?)\]";
+                                    var match = Regex.Match(botText, pattern);
+                                    if (match.Success)
+                                    {
+                                        var options = match.Groups["options"].Value;
+                                        var text = match.Groups["text"].Value;
+                                        var actions = new List<Models.Activities.Action>();
+
+                                        foreach (var option in options.Split('|', StringSplitOptions.RemoveEmptyEntries).ToList())
+                                        {
+                                            actions.Add(new Models.Activities.Action()
+                                            {
+                                                Text = option,
+                                                Title = option,
+                                                Value = option,
+                                                Type = "imBack"
+                                            });
+                                        }
+
+                                        activity = new Models.Activities.Activity
+                                        {
+                                            Type = Helpers.ActivityTypes.Message,
+                                            Text = text,
+                                            From = new From(string.Empty, 0),
+                                            Timestamp = ToUnixTimeSeconds(DateTime.UtcNow),
+                                            SuggestedActions = new SuggestedAction()
+                                            {
+                                                Actions = actions
+                                            }
+                                        };
+                                    }
+                                }
+                                else
+                                {
+                                    activity = new Models.Activities.Activity
+                                    {
+                                        Type = Helpers.ActivityTypes.Message,
+                                        Text = botText,
+                                        From = new From(string.Empty, 0),
+                                        Timestamp = ToUnixTimeSeconds(DateTime.UtcNow)
+                                    };
+                                }
                             }                            
 						}
                         else if (line.StartsWith("suggested:"))
@@ -410,38 +485,67 @@ namespace PVATestFramework.Console
                                     TestFile = path
                                 };
 
-                                if (receivedActivity.Text != null && receivedActivity.Text.Equals(BotDefaultMessages.DYM, StringComparison.InvariantCultureIgnoreCase))
+                                //TODO: refactor code
+                                //if (receivedActivity.Text != null && receivedActivity.Text.Equals(BotDefaultMessages.DYM, StringComparison.InvariantCultureIgnoreCase))
+                                if (receivedActivity.Text != null && receivedActivity.SuggestedActions != null && receivedActivity.SuggestedActions.Actions.Count != 0)
                                 {
-                                    expectedOptions = activity.Value?.IntentCandidates != null ? activity.Value?.IntentCandidates?.Select(o => o.IntentScore.Title).ToList() : new List<string>() { "No suggested topics found" };
-
-                                    for (int i = 0; i < receivedOptions.Count; i++)
+                                    if (receivedActivity.Text.Equals(BotDefaultMessages.DYM, StringComparison.InvariantCultureIgnoreCase))
                                     {
-                                        if (i == 0) csvRecord.DYM_Option1 = receivedOptions[i];
-                                        if (i == 1) csvRecord.DYM_Option2 = receivedOptions[i];
-                                        if (i == 2) csvRecord.DYM_Option3 = receivedOptions[i];
-                                    }
+                                        expectedOptions = activity.Value?.IntentCandidates != null ? activity.Value?.IntentCandidates?.Select(o => o.IntentScore.Title).ToList() : new List<string>() { "No suggested topics found" };
 
-                                    if (expectedOptions.Count != receivedOptions.Count)
-                                    {
-                                        testFailed = true;
+                                        for (int i = 0; i < receivedOptions.Count; i++)
+                                        {
+                                            if (i == 0) csvRecord.DYM_Option1 = receivedOptions[i];
+                                            if (i == 1) csvRecord.DYM_Option2 = receivedOptions[i];
+                                            if (i == 2) csvRecord.DYM_Option3 = receivedOptions[i];
+                                        }
+
+                                        if (expectedOptions.Count != receivedOptions.Count)
+                                        {
+                                            testFailed = true;
+                                        }
+                                        else
+                                        {
+                                            foreach (var suggestion in receivedOptions)
+                                            {
+                                                if (!expectedOptions.Any(option => option.Equals(suggestion, StringComparison.InvariantCultureIgnoreCase)))
+                                                {
+                                                    testFailed = true;
+                                                    break;
+                                                }
+                                            }
+                                        }
+
+                                        if (testFailed)
+                                        {
+                                            logger.ForegroundColor($"Test script failed", LoggerExtensions.LogLevel.Error, LoggerExtensions.Yellow);
+                                            logger.ForegroundColor($"Expected:\t{string.Join(" | ", expectedOptions)}", LoggerExtensions.LogLevel.Error, LoggerExtensions.Yellow);
+                                            logger.ForegroundColor($"Received:\t{string.Join(" | ", receivedOptions)}", LoggerExtensions.LogLevel.Error, LoggerExtensions.Yellow);
+                                        }
                                     }
                                     else
                                     {
-                                        foreach (var suggestion in receivedOptions)
+                                        expectedOptions = activity.SuggestedActions.Actions.Select(o => o.Title).ToList();
+                                        if (expectedOptions.Count != activity.SuggestedActions.Actions.Count)
                                         {
-                                            if (!expectedOptions.Any(option => option.Equals(suggestion, StringComparison.InvariantCultureIgnoreCase)))
+                                            testFailed = true;
+                                        }
+
+                                        for (int i = 0; i < receivedActivity.SuggestedActions.Actions.Count; i++)
+                                        {
+                                            if (!expectedOptions[i].Equals(receivedActivity.SuggestedActions.Actions[i].Title, StringComparison.InvariantCultureIgnoreCase))
                                             {
                                                 testFailed = true;
                                                 break;
                                             }
                                         }
-                                    }
 
-                                    if (testFailed)
-                                    {
-                                        logger.ForegroundColor($"Test script failed", LoggerExtensions.LogLevel.Error, LoggerExtensions.Yellow);
-                                        logger.ForegroundColor($"Expected:\t{string.Join(" | ", expectedOptions)}", LoggerExtensions.LogLevel.Error, LoggerExtensions.Yellow);
-                                        logger.ForegroundColor($"Received:\t{string.Join(" | ", receivedOptions)}", LoggerExtensions.LogLevel.Error, LoggerExtensions.Yellow);
+                                        if (testFailed)
+                                        {
+                                            logger.ForegroundColor($"Test script failed", LoggerExtensions.LogLevel.Error, LoggerExtensions.Yellow);
+                                            logger.ForegroundColor($"Expected:\t{string.Join(" | ", expectedOptions)}", LoggerExtensions.LogLevel.Error, LoggerExtensions.Yellow);
+                                            logger.ForegroundColor($"Received:\t{string.Join(" | ", receivedActivity.SuggestedActions.Actions.Select(a => a.Title).ToList())}", LoggerExtensions.LogLevel.Error, LoggerExtensions.Yellow);
+                                        }
                                     }
                                 }
                                 else
@@ -621,14 +725,14 @@ namespace PVATestFramework.Console
             else if (expectedActivity.Attachments != null && expectedActivity.Attachments.Count == receivedActivity.Attachments.Count)
             {
                 // This is an adaptive card, so the structure comparison will be executed
-                var expectedAttachments = expectedActivity.Attachments.Select(a => JsonConvert.SerializeObject(a.Content)).ToList();
-                var receivedAttachments = receivedActivity.Attachments.Select(a => JsonConvert.SerializeObject(a.Content)).ToList();
+                var expectedAttachments = expectedActivity.Attachments.Select(a => JsonConvert.SerializeObject(a.Content)).First();
+                var receivedAttachments = receivedActivity.Attachments.Select(a => JsonConvert.SerializeObject(a.Content)).First();
                 var settings = new AdaptiveCardTranslatorSettings();
 
-                for (int i = 0; i < expectedActivity.Attachments.Count; i++)
+                //for (int i = 0; i < expectedActivity.Attachments.Count; i++)
                 {
-                    var expectedCard = AdaptiveCard.GetCardWithoutValues(expectedAttachments[i].ToJObject(true), settings);
-                    var receivedCard = AdaptiveCard.GetCardWithoutValues(receivedAttachments[i].ToJObject(true), settings);
+                    var expectedCard = IsHeroCard(expectedActivity.Attachments.First().ContentType) ? expectedAttachments.ToJObject(true).ToString() : AdaptiveCard.GetCardWithoutValues(expectedAttachments.ToJObject(true), settings);
+                    var receivedCard = IsHeroCard(receivedActivity.Attachments.First().ContentType) ? receivedAttachments.ToJObject(true).ToString() : AdaptiveCard.GetCardWithoutValues(receivedAttachments.ToJObject(true), settings);
                     if (!expectedCard.Equals(receivedCard, StringComparison.InvariantCultureIgnoreCase))
                     {
                         return false;
@@ -662,19 +766,19 @@ namespace PVATestFramework.Console
         /// Extract the regex pattern
         /// </summary>
         /// <param name="input"></param>
-        /// <returns>path</returns>
+        /// <param name="regexPattern"></param>
+        /// <returns>string</returns>
         private string ExtractRegex(string input)
         {
             if (input == null)
             {
                 return null;
             }
-            string regexPattern = "<\\((.*?)\\)>"; // The regex pattern to search for
-            Regex regex = new Regex(regexPattern);
+            Regex regex = new Regex("<\\((.*?)\\)>");
             Match match = regex.Match(input);
             if (match.Success)
             {
-                return match.Groups[1].Value; // Extract the REGEX
+                return match.Groups[1].Value;
             }
             else
             {
@@ -686,13 +790,23 @@ namespace PVATestFramework.Console
         /// Convert a datetime to Unix time format
         /// </summary>
         /// <param name="date"></param>
-        /// <returns>path</returns>
+        /// <returns>int</returns>
         private int ToUnixTimeSeconds(DateTime date)
         {
             DateTime point = new DateTime(1970, 1, 1);
             TimeSpan time = date.Subtract(point);
 
             return (int)time.TotalSeconds;
+        }
+
+        /// <summary>
+        /// Check if the adaptive card is a Hero card or not
+        /// </summary>
+        /// <param name="contentType"></param>
+        /// <returns>boolean</returns>
+        private bool IsHeroCard(string contentType)
+        {
+            return contentType == CardContentTypes.HeroCard;
         }
     }
 }
