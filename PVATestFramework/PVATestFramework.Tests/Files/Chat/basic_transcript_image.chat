@@ -1,0 +1,5 @@
+user: Hi, can you generate an image including a funny dog?
+bot: Yes, sure!
+bot: [image:https://dummy/file.jpg][title:Funny dog][text:Find below the image]
+bot: Is that what you needed?
+user: Yes
