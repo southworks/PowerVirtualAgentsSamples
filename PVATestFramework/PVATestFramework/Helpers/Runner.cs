@@ -275,6 +275,10 @@ namespace PVATestFramework.Console
                                             }
                                         };
                                     }
+                                    else
+                                    {
+                                        throw new ArgumentException("The image tag was not set properly.");
+                                    }
                                 }
                                 else if (botText.StartsWith("[options:"))
                                 {
@@ -308,6 +312,10 @@ namespace PVATestFramework.Console
                                                 Actions = actions
                                             }
                                         };
+                                    }
+                                    else
+                                    {
+                                        throw new ArgumentException("The options tag was not set properly.");
                                     }
                                 }
                                 else
@@ -417,7 +425,8 @@ namespace PVATestFramework.Console
                                 var sendActivity = new Activity
                                 {
                                     Type = activity.Type,
-                                    Text = activity.Text
+                                    Text = activity.Text,
+                                    Name = activity.Name
                                 };
 
                                 userUtterance = sendActivity.Text;
@@ -525,26 +534,29 @@ namespace PVATestFramework.Console
                                     }
                                     else
                                     {
-                                        expectedOptions = activity.SuggestedActions.Actions.Select(o => o.Title).ToList();
-                                        if (expectedOptions.Count != activity.SuggestedActions.Actions.Count)
+                                        if (activity.SuggestedActions != null)
                                         {
-                                            testFailed = true;
-                                        }
-
-                                        for (int i = 0; i < receivedActivity.SuggestedActions.Actions.Count; i++)
-                                        {
-                                            if (!expectedOptions[i].Equals(receivedActivity.SuggestedActions.Actions[i].Title, StringComparison.InvariantCultureIgnoreCase))
+                                            expectedOptions = activity.SuggestedActions.Actions.Select(o => o.Title).ToList();
+                                            if (expectedOptions.Count != activity.SuggestedActions.Actions.Count)
                                             {
                                                 testFailed = true;
-                                                break;
                                             }
-                                        }
 
-                                        if (testFailed)
-                                        {
-                                            logger.ForegroundColor($"Test script failed", LoggerExtensions.LogLevel.Error, LoggerExtensions.Yellow);
-                                            logger.ForegroundColor($"Expected:\t{string.Join(" | ", expectedOptions)}", LoggerExtensions.LogLevel.Error, LoggerExtensions.Yellow);
-                                            logger.ForegroundColor($"Received:\t{string.Join(" | ", receivedActivity.SuggestedActions.Actions.Select(a => a.Title).ToList())}", LoggerExtensions.LogLevel.Error, LoggerExtensions.Yellow);
+                                            for (int i = 0; i < receivedActivity.SuggestedActions.Actions.Count; i++)
+                                            {
+                                                if (!expectedOptions[i].Equals(receivedActivity.SuggestedActions.Actions[i].Title, StringComparison.InvariantCultureIgnoreCase))
+                                                {
+                                                    testFailed = true;
+                                                    break;
+                                                }
+                                            }
+
+                                            if (testFailed)
+                                            {
+                                                logger.ForegroundColor($"Test script failed", LoggerExtensions.LogLevel.Error, LoggerExtensions.Yellow);
+                                                logger.ForegroundColor($"Expected:\t{string.Join(" | ", expectedOptions)}", LoggerExtensions.LogLevel.Error, LoggerExtensions.Yellow);
+                                                logger.ForegroundColor($"Received:\t{string.Join(" | ", receivedActivity.SuggestedActions.Actions.Select(a => a.Title).ToList())}", LoggerExtensions.LogLevel.Error, LoggerExtensions.Yellow);
+                                            }
                                         }
                                     }
                                 }
@@ -705,54 +717,66 @@ namespace PVATestFramework.Console
 		private bool AssertActivity(Models.Activities.Activity expectedActivity, Activity receivedActivity)
 		{
             bool result = true;
-            if (!string.IsNullOrEmpty(expectedActivity.Text) && !string.IsNullOrEmpty(receivedActivity.Text))
+            if (expectedActivity.Attachments != null && expectedActivity.Attachments.Count == receivedActivity.Attachments.Count)
             {
-                // Replace unwanted characters
-                receivedActivity.Text = receivedActivity.Text.Replace((char)0xA0, ' ');
+                // Validate the activity text
+                if (!string.IsNullOrEmpty(expectedActivity.Text) && !string.IsNullOrEmpty(receivedActivity.Text))
+                {
+                    result = CheckActivityText(expectedActivity.Text, receivedActivity.Text);
+                }
 
-                string pattern = ExtractRegex(expectedActivity.Text);
-                if (!string.IsNullOrEmpty(pattern))
-                {
-                    // If the line contains a regex pattern it will check if matches
-                    return Regex.IsMatch(receivedActivity.Text, pattern);
-                }
-                else if (!expectedActivity.Text.Equals(receivedActivity.Text, StringComparison.InvariantCultureIgnoreCase))
-                {
-                    // This is a simple text to compare
-                    return false;
-                }
-            }
-            else if (expectedActivity.Attachments != null && expectedActivity.Attachments.Count == receivedActivity.Attachments.Count)
-            {
                 // This is an adaptive card, so the structure comparison will be executed
                 var expectedAttachments = expectedActivity.Attachments.Select(a => JsonConvert.SerializeObject(a.Content)).First();
                 var receivedAttachments = receivedActivity.Attachments.Select(a => JsonConvert.SerializeObject(a.Content)).First();
                 var settings = new AdaptiveCardTranslatorSettings();
-
-                //for (int i = 0; i < expectedActivity.Attachments.Count; i++)
-                {
-                    var expectedCard = IsHeroCard(expectedActivity.Attachments.First().ContentType) ? expectedAttachments.ToJObject(true).ToString() : AdaptiveCard.GetCardWithoutValues(expectedAttachments.ToJObject(true), settings);
-                    var receivedCard = IsHeroCard(receivedActivity.Attachments.First().ContentType) ? receivedAttachments.ToJObject(true).ToString() : AdaptiveCard.GetCardWithoutValues(receivedAttachments.ToJObject(true), settings);
-                    if (!expectedCard.Equals(receivedCard, StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        return false;
-                    }
-                }
+                var expectedCard = IsHeroCard(expectedActivity.Attachments.First().ContentType) ? expectedAttachments.ToJObject(true).ToString() : AdaptiveCard.GetCardWithoutValues(expectedAttachments.ToJObject(true), settings);
+                var receivedCard = IsHeroCard(receivedActivity.Attachments.First().ContentType) ? receivedAttachments.ToJObject(true).ToString() : AdaptiveCard.GetCardWithoutValues(receivedAttachments.ToJObject(true), settings);
+                result = result && expectedCard.Equals(receivedCard, StringComparison.InvariantCultureIgnoreCase);
             }
             else
             {
-                return false;
+                // Validate the activity text
+                result = CheckActivityText(expectedActivity.Text, receivedActivity.Text);
             }
 
             return result;
         }
 
-		/// <summary>
-		/// validate if the activity should be ignored
-		/// </summary>
-		/// <param name="activity"></param>
-		/// <returns>boolean</returns>
-		private bool IgnoreActivity(Models.Activities.Activity activity)
+        /// <summary>
+        /// validate the activity text
+        /// </summary>
+        /// <param name="expectedText"></param>
+        /// <param name="receivedText"></param>
+        /// <returns>boolean</returns>
+        private bool CheckActivityText(string expectedText, string receivedText)
+        {
+            var result = false;
+            if (!string.IsNullOrEmpty(expectedText) && !string.IsNullOrEmpty(receivedText))
+            {
+                // Replace unwanted characters
+                receivedText = receivedText.Replace((char)0xA0, ' ');
+
+                string pattern = ExtractRegex(expectedText);
+                if (!string.IsNullOrEmpty(pattern))
+                {
+                    // If the line contains a regex pattern it will check if matches
+                    result = Regex.IsMatch(receivedText, pattern);
+                }
+                else if (expectedText.Equals(receivedText, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    // This is a simple text to compare
+                    result = true;
+                }
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// validate if the activity should be ignored
+        /// </summary>
+        /// <param name="activity"></param>
+        /// <returns>boolean</returns>
+        private bool IgnoreActivity(Models.Activities.Activity activity)
 		{
             // Ignore trace activities unless it is an IntentCandidates type one. Also, ignore the DYM message as it is sent in the previous activity
             return (activity.Type == Helpers.ActivityTypes.Trace

@@ -25,6 +25,7 @@ namespace PVATestFramework.Console.Models.Activities
         public string ValueType { get; set; }
         public string Id { get; set; }
         public string Type { get; set; }
+        public string Name { get; set; }
         public int Timestamp { get; set; }
         public From From { get; set; }
         public string ChannelId { get; set; }
