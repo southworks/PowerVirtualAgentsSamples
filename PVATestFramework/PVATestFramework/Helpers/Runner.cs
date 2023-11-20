@@ -275,6 +275,16 @@ namespace PVATestFramework.Console
                                             }
                                         };
                                     }
+                                    else if (botText.StartsWith("[image"))
+                                    {
+                                        var imagePattern = @"\[image.*\]";
+                                        var imageMatch = Regex.Match(botText, imagePattern);
+
+                                        if (imageMatch.Success)
+                                        {
+                                            throw new ArgumentException("There is no image.");
+                                        }
+                                    }
                                     else
                                     {
                                         throw new ArgumentException("The image tag was not set properly.");
