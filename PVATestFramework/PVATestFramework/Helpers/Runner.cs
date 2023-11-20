@@ -237,7 +237,7 @@ namespace PVATestFramework.Console
                                 throw new ArgumentException("The bot message is null or empty.");
                             }
                             else
-                            {                                
+                            {
                                 if (botText.StartsWith("[image:"))
                                 {
                                     var pattern = @"\[image:(?<image>.*?)\]\[title:(?<title>.*?)\]\[text:(?<text>.*?)\]";
@@ -274,16 +274,6 @@ namespace PVATestFramework.Console
                                                 }
                                             }
                                         };
-                                    }
-                                    else if (botText.StartsWith("[image"))
-                                    {
-                                        var imagePattern = @"\[image.*\]";
-                                        var imageMatch = Regex.Match(botText, imagePattern);
-
-                                        if (!imageMatch.Success)
-                                        {
-                                            throw new ArgumentException("There is no image.");
-                                        }
                                     }
                                     else
                                     {
