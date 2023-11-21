@@ -486,6 +486,15 @@ namespace PVATestFramework.Console.Tests
         }
 
         [Test]
+        public async Task RunTranscriptTestAsyncWithImageNoURL()
+        {
+            _directLineClient.Setup(client => client.ReceiveActivitiesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(_imageNoTitleActivityList);
+            var testRunner = new Mock<Runner>(_logger.Object, _directLineClient.Object, _fileHandler.Object);
+            var result = await testRunner.Object.RunTranscriptTestAsync(_dlOptions, Path.Combine(_passTestFolder, "basic_transcript_image_noURL_converted.json"), false);
+            Assert.IsTrue(result);
+        }
+
+        [Test]
         public async Task RunTranscriptTestAsyncWithImageFailed()
         {
             _directLineClient.Setup(client => client.ReceiveActivitiesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(_imageActivityList);
@@ -617,6 +626,16 @@ namespace PVATestFramework.Console.Tests
             var testRunner = new Mock<Runner>(_logger.Object, _fileHandler.Object);
             var result = testRunner.Object.ConvertChatFileToJSON(Path.Combine(_chatFolder, inputFile), Path.Combine(_chatFolder, outputFile));
             Assert.IsFalse(result);
+        }
+
+        [Test]
+        public void ConvertChatFileToJSONWithImageNoURL()
+        {
+            string inputFile = "basic_transcript_image_noURL.chat";
+            string outputFile = "basic_transcript_image_noURL.json";
+            var testRunner = new Mock<Runner>(_logger.Object, _fileHandler.Object);
+            var result = testRunner.Object.ConvertChatFileToJSON(Path.Combine(_chatFolder, inputFile), Path.Combine(_chatFolder, outputFile));
+            Assert.IsTrue(result);
         }
 
         [Test]
