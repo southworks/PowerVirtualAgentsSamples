@@ -245,7 +245,7 @@ For creating a basic DYM test script, the only consideration to have is that the
 
 ### Example:
 ```
-.\PVATestFramework.exe convertChatFile --path to_convert.chat --outputFile converted.json
+.\PVATestFramework.exe convertChatFile --path to_convert.chat --outputFile converted.json c
 ```
 
 ## How to get the PVA token endpoint
@@ -268,14 +268,14 @@ Follow these steps to get the PVA token endpoint.
 This endpoint should be used as the --tokenEndpoint parameter to run the test tool.
 
  ## Tips and tricks
- - If you want to run a bunch of files of the same extension, it is recommended to create a folder and then run the tool using a relative path to the folder. E.g: 
+ If you want to run a bunch of files of the same extension, it is recommended to create a folder and then run the tool using a relative path to the folder. E.g: 
  ```
  .\PVATestFramework.exe test --tokenEndpoint ${TOKENENDPOINT} --path ./FOLDER/
  ```
  This option is recommended for testing the tool locally and not when using it inside a Pipeline.
 
 ## Log File Generation
- - By default, when a test is executed the tool generates a .csv output file that can be found on the project folder, this file can later be processed by variety of tools (like MS Excel or MS Power BI) to obtain useful analytics or insights.
+ By default, when a test is executed the tool generates a .csv output file that can be found on the project folder, this file can later be processed by variety of tools (like MS Excel or MS Power BI) to obtain useful analytics or insights.
  Below there is the detail and description of each field that this .csv file contains:
 
     - SessionDate: date and time of the interaction.
@@ -292,12 +292,12 @@ The program uses the default system list separator to generate the .csv file. In
 
 ![image](./Images/regional.png)
 
- - An additional .log file can also be generated using the optional --log flag. This file can be found on the project folder and combined with the --verbose flag can be used for debugging if an error is encountered. Only one log file will be created per day, and the content will be appended to the file only if the --log flag is present in the command.
+ An additional .log file can also be generated using the optional --log flag. This file can be found on the project folder and combined with the --verbose flag can be used for debugging if an error is encountered. Only one log file will be created per day, and the content will be appended to the file only if the --log flag is present in the command.
 
  ![image](./Images/log.png)
 
 ## Message variations
- - The tool supports message variations on the bot side using RegEx. It will detect a tag with the following format <(REGEX)> on the message attribute of the transcript file used as input. This can be done by modifying the chat transcript file or simply mocking a .chat file and converting it to JSON using the appropriate command. This is an example of the second option:
+ The tool supports message variations on the bot side using RegEx. It will detect a tag with the following format <(REGEX)> on the message attribute of the transcript file used as input. This can be done by modifying the chat transcript file or simply mocking a .chat file and converting it to JSON using the appropriate command. This is an example of the second option:
  
 ![image](./Images/chat_regex.png)
 
@@ -311,12 +311,37 @@ The program uses the default system list separator to generate the .csv file. In
 
 ![image](./Images/pattern2.png)
 
- - To match any phrase this wildcard can be used:
+ To match any phrase this wildcard can be used:
  ```
  [\\s\\S]*?
  ```
 
-## Captured errors
+## How to handle images
+The tool supports images included in the Bot response using the following syntax when converting the script file into a JSON format. 
+
+![image](./Images/image_support1.png)
+
+The following fields can be used:
+- Image Url: [image:**https://dummy/file.jpg**]
+- Image title: [title:**Funny dog**]
+- Message text: [text:**Find below the image**]
+
+### Message template
+
+![image](./Images/image_support2.png)
+
+## How to handle multiple choice options
+The tool supports bot questions including multiple choice options. These options will be validated checking the same text and orders than the one defined in the test script. This feature is possible using the following syntax:
+
+![image](./Images/multichoice1.png)
+
+The following fields can be used:
+- Image Url: [options:**Basketball|Baseball|Soccer**]
+- Message text: [text:**Choose your preferred sport**]
+
+### Message template
+
+![image](./Images/multichoice2.png)
 
 ### File extension errors
 

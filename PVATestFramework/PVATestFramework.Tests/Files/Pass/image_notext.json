@@ -1,0 +1,58 @@
+{
+  "list_of_conversations": [
+    {
+      "Activities": [
+        {
+          "ValueType": null,
+          "Id": null,
+          "Type": "message",
+          "Name": null,
+          "Timestamp": 1700165482,
+          "From": {
+            "Id": "",
+            "Role": 1
+          },
+          "ChannelId": null,
+          "Value": null,
+          "TextFormat": null,
+          "Text": "Image test",
+          "Attachments": null,
+          "ReplyToId": null,
+          "SuggestedActions": null,
+          "LineNumber": 0
+        },
+        {
+          "ValueType": null,
+          "Id": null,
+          "Type": "message",
+          "Name": null,
+          "Timestamp": 1700165482,
+          "From": {
+            "Id": "",
+            "Role": 0
+          },
+          "ChannelId": null,
+          "Value": null,
+          "TextFormat": null,
+          "Attachments": [
+            {
+              "contentType": "application/vnd.microsoft.card.hero",
+              "content": {
+                "title": "image title",
+                "images": [
+                  {
+                    "url": "https://dummy/file.jpg"
+                  }
+                ],
+                "buttons": []
+              }
+            }
+          ],
+          "ReplyToId": null,
+          "SuggestedActions": null,
+          "LineNumber": 0
+        }
+      ]
+    }
+  ]
+}

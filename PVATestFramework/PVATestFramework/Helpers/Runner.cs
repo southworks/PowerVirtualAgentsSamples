@@ -238,10 +238,13 @@ namespace PVATestFramework.Console
                             }
                             else
                             {
-                                if (botText.StartsWith("[image:"))
+                                if (botText.StartsWith("[image"))
                                 {
                                     var pattern = @"\[image:(?<image>.*?)\]\[title:(?<title>.*?)\]\[text:(?<text>.*?)\]";
                                     var match = Regex.Match(botText, pattern);
+                                    var noURLPattern = @"\[image]";
+                                    var noURLMatch = Regex.Match(botText, noURLPattern);
+
                                     if (match.Success)
                                     {
                                         var imageUrl = match.Groups["image"].Value;
@@ -267,6 +270,34 @@ namespace PVATestFramework.Console
                                                             new Image()
                                                             {
                                                                 Url = imageUrl
+                                                            }
+                                                        },
+                                                        Buttons = new List<Button>()
+                                                    }
+                                                }
+                                            }
+                                        };
+                                    } else if (noURLMatch.Success)
+                                    {
+                                        var text = "imageNoURL";
+
+                                        activity = new Models.Activities.Activity
+                                        {
+                                            Type = Helpers.ActivityTypes.Message,
+                                            Text = text,
+                                            From = new From(string.Empty, 0),
+                                            Timestamp = ToUnixTimeSeconds(DateTime.UtcNow),
+                                            Attachments = new List<Attachment>
+                                            {
+                                                new Attachment()
+                                                {
+                                                    ContentType = CardContentTypes.HeroCard,
+                                                    Content = new Content()
+                                                    {
+                                                        Images = new List<Image>()
+                                                        {
+                                                            new Image()
+                                                            {
                                                             }
                                                         },
                                                         Buttons = new List<Button>()
@@ -739,8 +770,8 @@ namespace PVATestFramework.Console
                 var expectedAttachments = expectedActivity.Attachments.Select(a => JsonConvert.SerializeObject(a.Content)).First();
                 var receivedAttachments = receivedActivity.Attachments.Select(a => JsonConvert.SerializeObject(a.Content)).First();
                 var settings = new AdaptiveCardTranslatorSettings();
-                var expectedCard = IsHeroCard(expectedActivity.Attachments.First().ContentType) ? expectedAttachments.ToJObject(true).ToString() : AdaptiveCard.GetCardWithoutValues(expectedAttachments.ToJObject(true), settings);
-                var receivedCard = IsHeroCard(receivedActivity.Attachments.First().ContentType) ? receivedAttachments.ToJObject(true).ToString() : AdaptiveCard.GetCardWithoutValues(receivedAttachments.ToJObject(true), settings);
+                var expectedCard = IsHeroCard(expectedActivity.Attachments.First().ContentType) && expectedActivity.Text != "imageNoURL" ? expectedAttachments.ToJObject(true).ToString() : AdaptiveCard.GetCardWithoutValues(expectedAttachments.ToJObject(true), settings);
+                var receivedCard = IsHeroCard(receivedActivity.Attachments.First().ContentType) && expectedActivity.Text != "imageNoURL" ? receivedAttachments.ToJObject(true).ToString() : AdaptiveCard.GetCardWithoutValues(receivedAttachments.ToJObject(true), settings);
                 result = result && expectedCard.Equals(receivedCard, StringComparison.InvariantCultureIgnoreCase);
             }
             else

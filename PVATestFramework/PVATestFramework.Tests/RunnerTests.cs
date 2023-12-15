@@ -5,6 +5,7 @@ using Microsoft.Bot.Connector.DirectLine;
 using Moq;
 using Newtonsoft.Json;
 using Serilog;
+using PVATestFramework.Console.Helpers;
 
 namespace PVATestFramework.Console.Tests
 {
@@ -19,6 +20,8 @@ namespace PVATestFramework.Console.Tests
         private List<Activity> _simpleAndMultipleActivityList;
         private List<Activity> _dymActivityList;
         private List<Activity> _adaptiveCardActivityList;
+        private List<Activity> _imageActivityList, _imageNoTitleActivityList, _imageNoTextActivityList, _imageNoTextAndTitleActivityList;
+        private List<Activity> _multiplechoiceActivityList, _multiplechoiceNoTextActivityList;
         private readonly string _passTestFolder = Directory.GetCurrentDirectory() + @"\Files\Pass";
         private readonly string _failTestFolder = Directory.GetCurrentDirectory() + @"\Files\Fail";
         private readonly string _chatFolder = Directory.GetCurrentDirectory() + @"\Files\Chat";
@@ -145,6 +148,179 @@ namespace PVATestFramework.Console.Tests
             _simpleAndMultipleActivityList = new List<Activity>();
             _simpleAndMultipleActivityList.AddRange(_simpleActivityList);
             _simpleAndMultipleActivityList.AddRange(_multipleActivityList);
+
+            _imageActivityList = new List<Activity>
+            {
+                new Activity()
+                {
+                    From = new ChannelAccount()
+                    {
+                        Id = Guid.NewGuid().ToString()
+                    },
+                    Type = Helpers.ActivityTypes.Message,
+                    Text = "Message text",
+                    Conversation = new ConversationAccount() { Id = Guid.NewGuid().ToString() },
+                    Attachments = new List<Attachment>
+                    {
+                        new Attachment()
+                        {
+                            ContentType = CardContentTypes.HeroCard,
+                            Content = new Models.Activities.Content()
+                            {
+                                Title = "image title",
+                                Images = new List<Models.Activities.Image>()
+                                {
+                                    new Models.Activities.Image()
+                                    {
+                                        Url = "https://dummy/file.jpg"
+                                    }
+                                },
+                                Buttons = new List<Models.Activities.Button>()
+                            }
+                        }
+                    }
+                }
+            };
+
+            _imageNoTitleActivityList = new List<Activity>
+            {
+                new Activity()
+                {
+                    From = new ChannelAccount()
+                    {
+                        Id = Guid.NewGuid().ToString()
+                    },
+                    Type = Helpers.ActivityTypes.Message,
+                    Text = "Message text",
+                    Conversation = new ConversationAccount() { Id = Guid.NewGuid().ToString() },
+                    Attachments = new List<Attachment>
+                    {
+                        new Attachment()
+                        {
+                            ContentType = CardContentTypes.HeroCard,
+                            Content = new Models.Activities.Content()
+                            {
+                                Images = new List<Models.Activities.Image>()
+                                {
+                                    new Models.Activities.Image()
+                                    {
+                                        Url = "https://dummy/file.jpg"
+                                    }
+                                },
+                                Buttons = new List<Models.Activities.Button>()
+                            }
+                        }
+                    }
+                }
+            };
+
+            _imageNoTextActivityList = new List<Activity>
+            {
+                new Activity()
+                {
+                    From = new ChannelAccount()
+                    {
+                        Id = Guid.NewGuid().ToString()
+                    },
+                    Type = Helpers.ActivityTypes.Message,
+                    Conversation = new ConversationAccount() { Id = Guid.NewGuid().ToString() },
+                    Attachments = new List<Attachment>
+                    {
+                        new Attachment()
+                        {
+                            ContentType = CardContentTypes.HeroCard,
+                            Content = new Models.Activities.Content()
+                            {
+                                Title = "image title",
+                                Images = new List<Models.Activities.Image>()
+                                {
+                                    new Models.Activities.Image()
+                                    {
+                                        Url = "https://dummy/file.jpg"
+                                    }
+                                },
+                                Buttons = new List<Models.Activities.Button>()
+                            }
+                        }
+                    }
+                }
+            };
+
+            _imageNoTextAndTitleActivityList = new List<Activity>
+            {
+                new Activity()
+                {
+                    From = new ChannelAccount()
+                    {
+                        Id = Guid.NewGuid().ToString()
+                    },
+                    Type = Helpers.ActivityTypes.Message,
+                    Conversation = new ConversationAccount() { Id = Guid.NewGuid().ToString() },
+                    Attachments = new List<Attachment>
+                    {
+                        new Attachment()
+                        {
+                            ContentType = CardContentTypes.HeroCard,
+                            Content = new Models.Activities.Content()
+                            {
+                                Images = new List<Models.Activities.Image>()
+                                {
+                                    new Models.Activities.Image()
+                                    {
+                                        Url = "https://dummy/file.jpg"
+                                    }
+                                },
+                                Buttons = new List<Models.Activities.Button>()
+                            }
+                        }
+                    }
+                }
+            };
+
+            _multiplechoiceActivityList = new List<Activity>
+            {
+                new Activity()
+                {
+                    From = new ChannelAccount()
+                    {
+                        Id = Guid.NewGuid().ToString()
+                    },
+                    Type = Helpers.ActivityTypes.Message,
+                    Text = "Choose your preferred sport",
+                    Conversation = new ConversationAccount() { Id = Guid.NewGuid().ToString() },
+                    SuggestedActions = new SuggestedActions()
+                    {
+                        Actions = new List<CardAction>()
+                        {
+                            new CardAction() { Title = "Basketball" },
+                            new CardAction() { Title = "Baseball" },
+                            new CardAction() { Title = "Soccer" }
+                        }
+                    }
+                }
+            };
+
+            _multiplechoiceNoTextActivityList = new List<Activity>
+            {
+                new Activity()
+                {
+                    From = new ChannelAccount()
+                    {
+                        Id = Guid.NewGuid().ToString()
+                    },
+                    Type = Helpers.ActivityTypes.Message,
+                    Conversation = new ConversationAccount() { Id = Guid.NewGuid().ToString() },
+                    SuggestedActions = new SuggestedActions()
+                    {
+                        Actions = new List<CardAction>()
+                        {
+                            new CardAction() { Title = "Basketball" },
+                            new CardAction() { Title = "Baseball" },
+                            new CardAction() { Title = "Soccer" }
+                        }
+                    }
+                }
+            };
         }
 
 		[Test]
@@ -274,6 +450,87 @@ namespace PVATestFramework.Console.Tests
         }
 
         [Test]
+        public async Task RunTranscriptTestAsyncWithImagePassed()
+        {
+            _directLineClient.Setup(client => client.ReceiveActivitiesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(_imageActivityList);
+            var testRunner = new Mock<Runner>(_logger.Object, _directLineClient.Object, _fileHandler.Object);
+            var result = await testRunner.Object.RunTranscriptTestAsync(_dlOptions, Path.Combine(_passTestFolder, "image.json"), false);
+            Assert.IsTrue(result);
+        }
+
+        [Test]
+        public async Task RunTranscriptTestAsyncWithImageNoTextPassed()
+        {
+            _directLineClient.Setup(client => client.ReceiveActivitiesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(_imageNoTextActivityList);
+            var testRunner = new Mock<Runner>(_logger.Object, _directLineClient.Object, _fileHandler.Object);
+            var result = await testRunner.Object.RunTranscriptTestAsync(_dlOptions, Path.Combine(_passTestFolder, "image_notext.json"), false);
+            Assert.IsTrue(result);
+        }
+
+        [Test]
+        public async Task RunTranscriptTestAsyncWithImageNoTitlePassed()
+        {
+            _directLineClient.Setup(client => client.ReceiveActivitiesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(_imageNoTitleActivityList);
+            var testRunner = new Mock<Runner>(_logger.Object, _directLineClient.Object, _fileHandler.Object);
+            var result = await testRunner.Object.RunTranscriptTestAsync(_dlOptions, Path.Combine(_passTestFolder, "image_notitle.json"), false);
+            Assert.IsTrue(result);
+        }
+
+        [Test]
+        public async Task RunTranscriptTestAsyncWithImageNoTextAndTitlePassed()
+        {
+            _directLineClient.Setup(client => client.ReceiveActivitiesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(_imageNoTextAndTitleActivityList);
+            var testRunner = new Mock<Runner>(_logger.Object, _directLineClient.Object, _fileHandler.Object);
+            var result = await testRunner.Object.RunTranscriptTestAsync(_dlOptions, Path.Combine(_passTestFolder, "image_notextandtitle.json"), false);
+            Assert.IsTrue(result);
+        }
+
+        [Test]
+        public async Task RunTranscriptTestAsyncWithImageNoURL()
+        {
+            _directLineClient.Setup(client => client.ReceiveActivitiesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(_imageNoTitleActivityList);
+            var testRunner = new Mock<Runner>(_logger.Object, _directLineClient.Object, _fileHandler.Object);
+            var result = await testRunner.Object.RunTranscriptTestAsync(_dlOptions, Path.Combine(_passTestFolder, "basic_transcript_image_noURL_converted.json"), false);
+            Assert.IsTrue(result);
+        }
+
+        [Test]
+        public async Task RunTranscriptTestAsyncWithImageFailed()
+        {
+            _directLineClient.Setup(client => client.ReceiveActivitiesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(_imageActivityList);
+            var testRunner = new Mock<Runner>(_logger.Object, _directLineClient.Object, _fileHandler.Object);
+            var result = await testRunner.Object.RunTranscriptTestAsync(_dlOptions, Path.Combine(_failTestFolder, "image.json"), false);
+            Assert.IsFalse(result);
+        }
+
+        [Test]
+        public async Task RunTranscriptTestAsyncWithMultipleChoicePassed()
+        {
+            _directLineClient.Setup(client => client.ReceiveActivitiesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(_multiplechoiceActivityList);
+            var testRunner = new Mock<Runner>(_logger.Object, _directLineClient.Object, _fileHandler.Object);
+            var result = await testRunner.Object.RunTranscriptTestAsync(_dlOptions, Path.Combine(_passTestFolder, "multiplechoice.json"), false);
+            Assert.IsTrue(result);
+        }
+
+        [Test]
+        public async Task RunTranscriptTestAsyncWithMultipleChoiceFailed()
+        {
+            _directLineClient.Setup(client => client.ReceiveActivitiesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(_multiplechoiceActivityList);
+            var testRunner = new Mock<Runner>(_logger.Object, _directLineClient.Object, _fileHandler.Object);
+            var result = await testRunner.Object.RunTranscriptTestAsync(_dlOptions, Path.Combine(_failTestFolder, "multiplechoice.json"), false);
+            Assert.IsFalse(result);
+        }
+        /*
+        [Test]
+        public async Task RunTranscriptTestAsyncWithMultipleChoiceNoTextPassed()
+        {
+            _directLineClient.Setup(client => client.ReceiveActivitiesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(_multiplechoiceNoTextActivityList);
+            var testRunner = new Mock<Runner>(_logger.Object, _directLineClient.Object, _fileHandler.Object);
+            var result = await testRunner.Object.RunTranscriptTestAsync(_dlOptions, Path.Combine(_passTestFolder, "multiplechoice_notext.json"), false);
+            Assert.IsTrue(result);
+        }
+        */
+        [Test]
         public void ConvertChatFileToJSONPassed()
         {
             var testRunner = new Mock<Runner>(_logger.Object, _fileHandler.Object);
@@ -349,6 +606,56 @@ namespace PVATestFramework.Console.Tests
             var testRunner = new Mock<Runner>(_logger.Object, _fileHandler.Object);
             var result = testRunner.Object.ConvertChatFileToJSON(Path.Combine(_chatFolder, inputFile), Path.Combine(_chatFolder, outputFile));
             Assert.IsTrue(result);
+        }
+
+        [Test]
+        public void ConvertChatFileToJSONWithImagePassed()
+        {
+            string inputFile = "basic_transcript_image.chat";
+            string outputFile = "basic_transcript_image.json";
+            var testRunner = new Mock<Runner>(_logger.Object, _fileHandler.Object);
+            var result = testRunner.Object.ConvertChatFileToJSON(Path.Combine(_chatFolder, inputFile), Path.Combine(_chatFolder, outputFile));
+            Assert.IsTrue(result);
+        }
+
+        [Test]
+        public void ConvertChatFileToJSONWithImageFailed()
+        {
+            string inputFile = "basic_transcript_image_failed.chat";
+            string outputFile = "basic_transcript_image.json";
+            var testRunner = new Mock<Runner>(_logger.Object, _fileHandler.Object);
+            var result = testRunner.Object.ConvertChatFileToJSON(Path.Combine(_chatFolder, inputFile), Path.Combine(_chatFolder, outputFile));
+            Assert.IsFalse(result);
+        }
+
+        [Test]
+        public void ConvertChatFileToJSONWithImageNoURL()
+        {
+            string inputFile = "basic_transcript_image_noURL.chat";
+            string outputFile = "basic_transcript_image_noURL.json";
+            var testRunner = new Mock<Runner>(_logger.Object, _fileHandler.Object);
+            var result = testRunner.Object.ConvertChatFileToJSON(Path.Combine(_chatFolder, inputFile), Path.Combine(_chatFolder, outputFile));
+            Assert.IsTrue(result);
+        }
+
+        [Test]
+        public void ConvertChatFileToJSONWithMultipleChoicePassed()
+        {
+            string inputFile = "basic_transcript_multiplechoice.chat";
+            string outputFile = "basic_transcript_multiplechoice.json";
+            var testRunner = new Mock<Runner>(_logger.Object, _fileHandler.Object);
+            var result = testRunner.Object.ConvertChatFileToJSON(Path.Combine(_chatFolder, inputFile), Path.Combine(_chatFolder, outputFile));
+            Assert.IsTrue(result);
+        }
+
+        [Test]
+        public void ConvertChatFileToJSONWithMultipleChoiceFailed()
+        {
+            string inputFile = "basic_transcript_multiplechoice_failed.chat";
+            string outputFile = "basic_transcript_multiplechoice.json";
+            var testRunner = new Mock<Runner>(_logger.Object, _fileHandler.Object);
+            var result = testRunner.Object.ConvertChatFileToJSON(Path.Combine(_chatFolder, inputFile), Path.Combine(_chatFolder, outputFile));
+            Assert.IsFalse(result);
         }
     }
 }

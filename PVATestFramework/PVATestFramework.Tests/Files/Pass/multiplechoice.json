@@ -1,0 +1,48 @@
+{
+  "list_of_conversations": [
+    {
+      "Activities": [
+        {
+          "ValueType": null,
+          "Id": null,
+          "Type": "message",
+          "Name": null,
+          "Timestamp": 1700161429,
+          "From": {
+            "Id": "",
+            "Role": 0
+          },
+          "ChannelId": null,
+          "Value": null,
+          "TextFormat": null,
+          "Text": "Choose your preferred sport",
+          "Attachments": null,
+          "ReplyToId": null,
+          "SuggestedActions": {
+            "actions": [
+              {
+                "type": "imBack",
+                "title": "Basketball",
+                "text": "Basketball",
+                "value": "Basketball"
+              },
+              {
+                "type": "imBack",
+                "title": "Baseball",
+                "text": "Baseball",
+                "value": "Baseball"
+              },
+              {
+                "type": "imBack",
+                "title": "Soccer",
+                "text": "Soccer",
+                "value": "Soccer"
+              }
+            ]
+          },
+          "LineNumber": 0
+        }
+      ]
+    }
+  ]
+}
