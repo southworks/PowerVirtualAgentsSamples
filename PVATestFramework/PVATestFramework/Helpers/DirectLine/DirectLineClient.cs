@@ -42,10 +42,11 @@ namespace PVATestFramework.Console.Helpers.DirectLine
                 {
                     Type = activity.Type,
                     From = _channelAccount,
-                    Text = activity.Text
+                    Text = activity.Text,
+                    Name = activity.Name
                 };
 
-                await _directLineClient.Conversations.PostActivityAsync(_conversation.ConversationId, activityPost, cancellationToken).ConfigureAwait(false);
+                await _directLineClient.Conversations.PostActivityAsync(_conversation?.ConversationId, activityPost, cancellationToken).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -61,9 +62,23 @@ namespace PVATestFramework.Console.Helpers.DirectLine
 
             try
             {
+                if (_conversation == null)
+                {
+                    await StartConversationAsync().ConfigureAwait(false);
+                    
+                    //Force the greeting message to be sent by the Bot
+                    var sendActivity = new Activity
+                    {
+                        Type = ActivityTypes.Event,
+                        Name = ActivityEventNames.StartConversation
+                    };
+
+                    await SendActivityAsync(sendActivity, cancellationToken).ConfigureAwait(false);
+                }
+
                 do
                 {
-                    response = await _directLineClient.Conversations.GetActivitiesAsync(_conversation.ConversationId, _watermark);
+                    response = await _directLineClient.Conversations.GetActivitiesAsync(_conversation?.ConversationId, _watermark);
                     if (response == null)
                     {
                         // Response can be null if directLineClient token expires
