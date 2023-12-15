@@ -39,6 +39,11 @@ namespace PVATestFramework.Console.Helpers
         public static string NoneOfThese = "None of these";
     }
 
+    public static class CardContentTypes
+    {
+        public const string HeroCard = "application/vnd.microsoft.card.hero";
+    }
+
     public enum Interval
     {
         LastNTranscripts = 0,
